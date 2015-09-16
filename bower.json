@@ -13,5 +13,8 @@
     "purescript-eff": "~0.1.0",
     "purescript-contravariant": "~0.2.1",
     "purescript-invariant": "~0.3.0"
+  },
+  "devDependencies": {
+    "purescript-console": "~0.1.1"
   }
 }
