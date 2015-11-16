@@ -45,7 +45,6 @@ module Control.Monad.Eff.Var
 import Prelude
 
 import Control.Monad.Eff
-import Control.Monad.Eff.Ref
 import Data.Functor.Contravariant
 import Data.Functor.Invariant
 
