@@ -1,7 +1,7 @@
 {
   "name": "purescript-var",
   "description": "Vars -- references that can be read/written from the Eff monad",
-  "authors": "Konstantin Zudov <co@zudov.me>",
+  "authors": [ "Konstantin Zudov <co@zudov.me>" ],
   "license": "BSD3",
   "moduleType": [
     "node"
