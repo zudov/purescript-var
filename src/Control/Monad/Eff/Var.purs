@@ -45,7 +45,11 @@ module Control.Monad.Eff.Var
 import Prelude
 
 import Control.Monad.Eff
+
+import Data.Tuple
+import Data.Either
 import Data.Functor.Contravariant
+import Data.Functor.Contravariant.Divisible
 import Data.Functor.Invariant
 
 -- | Typeclass for vars that can be read.
@@ -106,6 +110,12 @@ instance gettableGettableVar :: Gettable eff (GettableVar eff) a where
 instance functorGettableVar :: Functor (GettableVar eff) where
   map f (GettableVar a) = GettableVar (f <$> a)
 
+instance applyGettableVar :: Apply (GettableVar eff) where
+  apply (GettableVar f) (GettableVar a) = GettableVar (apply f a)
+
+instance applicativeGettableVar :: Applicative (GettableVar eff) where
+  pure = GettableVar <<< pure
+
 -- | Write-only var which holds a value of type `a` and produces effects `eff`
 -- | when written.
 newtype SettableVar eff a = SettableVar (a -> Eff eff Unit)
@@ -119,3 +129,19 @@ instance settableSettableVar :: Settable eff (SettableVar eff) a where
 
 instance contravariantSettableVar :: Contravariant (SettableVar eff) where
   cmap f (SettableVar a) = SettableVar (a <<< f)
+
+instance divideSettableVar :: Divide (SettableVar eff) where
+  divide f (SettableVar setb) (SettableVar setc) = SettableVar \a ->
+    case f a of
+      Tuple b c -> do
+        setb b
+        setc c
+
+instance divisibleSettableVar :: Divisible (SettableVar eff) where
+  conquer = SettableVar \_ -> return unit
+
+instance decideSettableVar :: Decide (SettableVar eff) where
+  decide f (SettableVar setb) (SettableVar setc) = SettableVar (either setb setc <<< f)
+
+instance decidableSettableVar :: Decidable (SettableVar eff) where
+  lose = SettableVar
