@@ -1,20 +1,28 @@
 {
   "name": "purescript-var",
+  "description": "Vars -- references that can be read/written from the Eff monad",
+  "authors": "Konstantin Zudov <co@zudov.me>",
+  "license": "BSD3",
   "moduleType": [
     "node"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/zudov/purescript-var.git"
+  },
   "ignore": [
     "**/.*",
     "node_modules",
     "bower_components",
     "output"
   ],
+  "keywords": [ "purescript" ],
   "dependencies": {
-    "purescript-eff": "~0.1.0",
-    "purescript-contravariant": "~0.2.1",
-    "purescript-invariant": "~0.3.0"
+    "purescript-eff": "^0.1.2",
+    "purescript-contravariant": "^0.2.3",
+    "purescript-invariant": "^0.3.0"
   },
   "devDependencies": {
-    "purescript-console": "~0.1.1"
+    "purescript-console": "^0.1.1"
   }
 }
