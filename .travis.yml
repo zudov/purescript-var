@@ -14,3 +14,13 @@ install:
 script:
   - pulp test && pulp docs
 
+after_success:
+  - >-
+    test $TRAVIS_TAG &&
+    psc-publish \
+      | tail -n 1 \
+      > output/documentation.json &&
+    curl -X POST http://pursuit.purescript.org/packages \
+      -d @output/documentation.json \
+      -H 'Accept: application/json' \
+      -H "Authorization: token ${GITHUB_TOKEN}"
