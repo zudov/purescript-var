@@ -37,8 +37,8 @@ Typeclass for vars that can be read.
 
 ##### Instances
 ``` purescript
-instance gettableVar :: Gettable eff (Var eff) a
-instance gettableGettableVar :: Gettable eff (GettableVar eff) a
+Gettable eff (Var eff) a
+Gettable eff (GettableVar eff) a
 ```
 
 #### `Settable`
@@ -52,8 +52,8 @@ Typeclass for vars that can be written.
 
 ##### Instances
 ``` purescript
-instance settableVar :: Settable eff (Var eff) a
-instance settableSettableVar :: Settable eff (SettableVar eff) a
+Settable eff (Var eff) a
+Settable eff (SettableVar eff) a
 ```
 
 #### `($=)`
@@ -75,7 +75,7 @@ Typeclass for vars that can be updated.
 
 ##### Instances
 ``` purescript
-instance updatableVar :: Updatable eff (Var eff) a
+Updatable eff (Var eff) a
 ```
 
 #### `($~)`
@@ -97,10 +97,10 @@ when read or written.
 
 ##### Instances
 ``` purescript
-instance settableVar :: Settable eff (Var eff) a
-instance gettableVar :: Gettable eff (Var eff) a
-instance updatableVar :: Updatable eff (Var eff) a
-instance invariantVar :: Invariant (Var eff)
+Settable eff (Var eff) a
+Gettable eff (Var eff) a
+Updatable eff (Var eff) a
+Invariant (Var eff)
 ```
 
 #### `makeVar`
@@ -122,8 +122,10 @@ when read.
 
 ##### Instances
 ``` purescript
-instance gettableGettableVar :: Gettable eff (GettableVar eff) a
-instance functorGettableVar :: Functor (GettableVar eff)
+Gettable eff (GettableVar eff) a
+Functor (GettableVar eff)
+Apply (GettableVar eff)
+Applicative (GettableVar eff)
 ```
 
 #### `makeGettableVar`
@@ -145,8 +147,12 @@ when written.
 
 ##### Instances
 ``` purescript
-instance settableSettableVar :: Settable eff (SettableVar eff) a
-instance contravariantSettableVar :: Contravariant (SettableVar eff)
+Settable eff (SettableVar eff) a
+Contravariant (SettableVar eff)
+Divide (SettableVar eff)
+Divisible (SettableVar eff)
+Decide (SettableVar eff)
+Decidable (SettableVar eff)
 ```
 
 #### `makeSettableVar`
