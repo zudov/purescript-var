@@ -13,7 +13,7 @@ counter :: forall eff. Var (count :: COUNT | eff) Int
 counter = makeVar getCounter setCounter
 
 main = do
-  counter $= 0           -- set counter to 0
+  counter $= 0            -- set counter to 0
   get counter >>= logShow -- => 0
   counter $= 2            -- set counter to 2
   get counter >>= logShow -- => 2
