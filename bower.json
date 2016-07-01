@@ -18,11 +18,11 @@
   ],
   "keywords": [ "purescript" ],
   "dependencies": {
-    "purescript-eff": "^0.1.2",
-    "purescript-contravariant": "^0.2.3",
-    "purescript-invariant": "^0.3.0"
+    "purescript-eff": "^1.0.0",
+    "purescript-contravariant": "^1.0.0",
+    "purescript-invariant": "^1.0.0"
   },
   "devDependencies": {
-    "purescript-console": "^0.1.1"
+    "purescript-console": "^1.0.0"
   }
 }

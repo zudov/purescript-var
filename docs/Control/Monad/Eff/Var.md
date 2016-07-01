@@ -59,10 +59,10 @@ Settable eff (SettableVar eff) a
 #### `($=)`
 
 ``` purescript
-($=) :: forall eff var a. (Settable eff var a) => var a -> a -> Eff eff Unit
+infixr 2 set as $=
 ```
 
-_right-associative / precedence 2_
+Alias for `set`.
 
 #### `Updatable`
 
@@ -81,10 +81,10 @@ Updatable eff (Var eff) a
 #### `($~)`
 
 ``` purescript
-($~) :: forall eff var a. (Updatable eff var a) => var a -> (a -> a) -> Eff eff Unit
+infixr 2 update as $~
 ```
 
-_right-associative / precedence 2_
+Alias for `update`
 
 #### `Var`
 
