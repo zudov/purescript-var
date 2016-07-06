@@ -26,12 +26,12 @@
 -- | ```
 
 module Control.Monad.Eff.Var
-  ( Gettable
+  ( class Gettable
   , get
-  , Settable
+  , class Settable
   , set
   , ($=)
-  , Updatable
+  , class Updatable
   , update
   , ($~)
   , Var()
@@ -44,13 +44,16 @@ module Control.Monad.Eff.Var
 
 import Prelude
 
-import Control.Monad.Eff
+import Control.Monad.Eff (Eff)
+import Data.Decidable (class Decidable)
+import Data.Decide (class Decide)
+import Data.Divide (class Divide)
+import Data.Divisible (class Divisible)
+import Data.Tuple (Tuple(..))
+import Data.Either (either)
+import Data.Functor.Contravariant (class Contravariant, (>$<))
+import Data.Functor.Invariant (class Invariant)
 
-import Data.Tuple
-import Data.Either
-import Data.Functor.Contravariant
-import Data.Functor.Contravariant.Divisible
-import Data.Functor.Invariant
 
 -- | Typeclass for vars that can be read.
 class Gettable (eff :: # !) (var :: * -> *) (a :: *) where
@@ -61,20 +64,14 @@ class Settable (eff :: # !) (var :: * -> *) (a :: *) where
   set :: var a -> a -> Eff eff Unit
 
 -- | Alias for `set`.
-infixr 2 $=
-($=) :: forall eff var a. (Settable eff var a)
-     => var a -> a -> Eff eff Unit
-($=) = set
+infixr 2 set as $=
 
 -- | Typeclass for vars that can be updated.
 class Updatable (eff :: # !) (var :: * -> *) (a :: *) where
   update :: var a -> (a -> a) -> Eff eff Unit
 
 -- | Alias for `get`
-infixr 2 $~
-($~) :: forall eff var a. (Updatable eff var a)
-     => var a -> (a -> a) -> Eff eff Unit
-($~) = update
+infixr 2 update as $~
 
 -- | Read/Write var which holds a value of type `a` and produces effects `eff`
 -- | when read or written.
@@ -138,10 +135,11 @@ instance divideSettableVar :: Divide (SettableVar eff) where
         setc c
 
 instance divisibleSettableVar :: Divisible (SettableVar eff) where
-  conquer = SettableVar \_ -> return unit
+  conquer = SettableVar \_ -> pure unit
 
 instance decideSettableVar :: Decide (SettableVar eff) where
-  decide f (SettableVar setb) (SettableVar setc) = SettableVar (either setb setc <<< f)
+  choose f (SettableVar setb) (SettableVar setc) = SettableVar (either setb setc <<< f)
 
 instance decidableSettableVar :: Decidable (SettableVar eff) where
-  lose = SettableVar
+--  lose :: forall a. (a -> Void) -> f a
+  lose f = SettableVar (absurd <<< f)
