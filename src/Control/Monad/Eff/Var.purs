@@ -42,8 +42,9 @@ module Control.Monad.Eff.Var
   , makeSettableVar
   ) where
 
-import Prelude
-
+import Prelude ( class Applicative, class Apply, class Functor
+               , pure, bind, apply, unit, Unit, absurd
+               , (<<<), (<$>), (>>>), (>>=))
 import Control.Monad.Eff (Eff)
 import Data.Decidable (class Decidable)
 import Data.Decide (class Decide)
@@ -53,7 +54,6 @@ import Data.Tuple (Tuple(..))
 import Data.Either (either)
 import Data.Functor.Contravariant (class Contravariant, (>$<))
 import Data.Functor.Invariant (class Invariant)
-
 
 -- | Typeclass for vars that can be read.
 class Gettable (eff :: # !) (var :: * -> *) (a :: *) where
@@ -75,23 +75,31 @@ infixr 2 update as $~
 
 -- | Read/Write var which holds a value of type `a` and produces effects `eff`
 -- | when read or written.
-data Var (eff :: # !) a = Var (GettableVar eff a) (SettableVar eff a)
+newtype Var (eff :: # !) a
+  = Var { gettable :: GettableVar eff a
+        , settable :: SettableVar eff a
+        }
 
 -- | Create a `Var` from getter and setter.
 makeVar :: forall eff a. Eff eff a -> (a -> Eff eff Unit) -> Var eff a
-makeVar g s = Var (makeGettableVar g) (makeSettableVar s)
+makeVar g s = Var { gettable, settable }
+  where
+    gettable = makeGettableVar g
+    settable = makeSettableVar s
 
 instance settableVar :: Settable eff (Var eff) a where
-  set (Var _ (SettableVar s)) = s
+  set (Var { settable } ) = set settable
 
 instance gettableVar :: Gettable eff (Var eff) a where
-  get (Var g _) = get g
+  get (Var { gettable }) = get gettable
 
 instance updatableVar :: Updatable eff (Var eff) a where
   update v f = get v >>= f >>> set v
 
 instance invariantVar :: Invariant (Var eff) where
-  imap ab ba (Var ga sa) = Var (ab <$> ga) (ba >$< sa)
+  imap ab ba (Var v) = Var { gettable: ab <$> v.gettable
+                           , settable: ba >$< v.settable
+                           }
 
 -- | Read-only var which holds a value of type `a` and produces effects `eff`
 -- | when read.
