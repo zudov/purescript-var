@@ -56,18 +56,18 @@ import Data.Functor.Contravariant (class Contravariant, (>$<))
 import Data.Functor.Invariant (class Invariant)
 
 -- | Typeclass for vars that can be read.
-class Gettable (eff :: # !) (var :: * -> *) (a :: *) where
+class Gettable (eff :: # !) (var :: * -> *) (a :: *) | var -> a, var -> eff where
   get :: var a -> Eff eff a
 
 -- | Typeclass for vars that can be written.
-class Settable (eff :: # !) (var :: * -> *) (a :: *) where
+class Settable (eff :: # !) (var :: * -> *) (a :: *) | var -> a, var -> eff where
   set :: var a -> a -> Eff eff Unit
 
 -- | Alias for `set`.
 infixr 2 set as $=
 
 -- | Typeclass for vars that can be updated.
-class Updatable (eff :: # !) (var :: * -> *) (a :: *) where
+class Updatable (eff :: # !) (var :: * -> *) (a :: *) | var -> a, var -> eff where
   update :: var a -> (a -> a) -> Eff eff Unit
 
 -- | Alias for `get`
