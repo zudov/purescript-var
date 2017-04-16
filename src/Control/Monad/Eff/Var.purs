@@ -3,7 +3,7 @@
 
 -- | For example we might have some global counter with the following API:
 -- | ```purescript
--- | foreign import data COUNT :: !
+-- | foreign import data COUNT :: Effect
 -- | getCounter :: forall eff. Eff (count :: COUNT | eff) Int
 -- | setCounter :: forall eff. Int -> Eff (count :: COUNT | eff) Unit
 -- | ```
@@ -43,9 +43,9 @@ module Control.Monad.Eff.Var
   ) where
 
 import Prelude ( class Applicative, class Apply, class Functor
-               , pure, bind, apply, unit, Unit, absurd
+               , pure, discard, apply, unit, Unit, absurd
                , (<<<), (<$>), (>>>), (>>=))
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (kind Effect, Eff)
 import Data.Decidable (class Decidable)
 import Data.Decide (class Decide)
 import Data.Divide (class Divide)
@@ -56,18 +56,18 @@ import Data.Functor.Contravariant (class Contravariant, (>$<))
 import Data.Functor.Invariant (class Invariant)
 
 -- | Typeclass for vars that can be read.
-class Gettable (eff :: # !) (var :: * -> *) (a :: *) | var -> a, var -> eff where
+class Gettable (eff :: # Effect) (var :: Type -> Type) (a :: Type) | var -> a, var -> eff where
   get :: var a -> Eff eff a
 
 -- | Typeclass for vars that can be written.
-class Settable (eff :: # !) (var :: * -> *) (a :: *) | var -> a, var -> eff where
+class Settable (eff :: # Effect) (var :: Type -> Type) (a :: Type) | var -> a, var -> eff where
   set :: var a -> a -> Eff eff Unit
 
 -- | Alias for `set`.
 infixr 2 set as $=
 
 -- | Typeclass for vars that can be updated.
-class Updatable (eff :: # !) (var :: * -> *) (a :: *) | var -> a, var -> eff where
+class Updatable (eff :: # Effect) (var :: Type -> Type) (a :: Type) | var -> a, var -> eff where
   update :: var a -> (a -> a) -> Eff eff Unit
 
 -- | Alias for `get`
@@ -75,7 +75,7 @@ infixr 2 update as $~
 
 -- | Read/Write var which holds a value of type `a` and produces effects `eff`
 -- | when read or written.
-newtype Var (eff :: # !) a
+newtype Var (eff :: # Effect) a
   = Var { gettable :: GettableVar eff a
         , settable :: SettableVar eff a
         }
