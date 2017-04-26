@@ -45,7 +45,7 @@ module Control.Monad.Eff.Var
 import Prelude ( class Applicative, class Apply, class Functor
                , pure, bind, apply, unit, Unit, absurd
                , (<<<), (<$>), (>>>), (>>=))
-import Control.Monad.Eff (Eff)
+import Control.Monad.Eff (Eff, kind Effect)
 import Data.Decidable (class Decidable)
 import Data.Decide (class Decide)
 import Data.Divide (class Divide)
@@ -56,18 +56,18 @@ import Data.Functor.Contravariant (class Contravariant, (>$<))
 import Data.Functor.Invariant (class Invariant)
 
 -- | Typeclass for vars that can be read.
-class Gettable (eff :: # !) (var :: * -> *) (a :: *) | var -> a, var -> eff where
+class Gettable (eff :: # Effect) (var :: Type -> Type) (a :: Type) | var -> a, var -> eff where
   get :: var a -> Eff eff a
 
 -- | Typeclass for vars that can be written.
-class Settable (eff :: # !) (var :: * -> *) (a :: *) | var -> a, var -> eff where
+class Settable (eff :: # Effect) (var :: Type -> Type) (a :: Type) | var -> a, var -> eff where
   set :: var a -> a -> Eff eff Unit
 
 -- | Alias for `set`.
 infixr 2 set as $=
 
 -- | Typeclass for vars that can be updated.
-class Updatable (eff :: # !) (var :: * -> *) (a :: *) | var -> a, var -> eff where
+class Updatable (eff :: # Effect) (var :: Type -> Type) (a :: Type) | var -> a, var -> eff where
   update :: var a -> (a -> a) -> Eff eff Unit
 
 -- | Alias for `get`
@@ -75,7 +75,7 @@ infixr 2 update as $~
 
 -- | Read/Write var which holds a value of type `a` and produces effects `eff`
 -- | when read or written.
-newtype Var (eff :: # !) a
+newtype Var (eff :: # Effect) a
   = Var { gettable :: GettableVar eff a
         , settable :: SettableVar eff a
         }
@@ -139,7 +139,7 @@ instance divideSettableVar :: Divide (SettableVar eff) where
   divide f (SettableVar setb) (SettableVar setc) = SettableVar \a ->
     case f a of
       Tuple b c -> do
-        setb b
+        _ <- setb b
         setc c
 
 instance divisibleSettableVar :: Divisible (SettableVar eff) where
