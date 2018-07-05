@@ -25,7 +25,7 @@
 -- |   get counter >>= print -- => 10
 -- | ```
 
-module Control.Monad.Eff.Var
+module Effect.Var
   ( class Gettable
   , get
   , class Settable
@@ -42,10 +42,9 @@ module Control.Monad.Eff.Var
   , makeSettableVar
   ) where
 
-import Prelude ( class Applicative, class Apply, class Functor
-               , pure, bind, apply, unit, Unit, absurd
-               , (<<<), (<$>), (>>>), (>>=))
-import Control.Monad.Eff (Eff, kind Effect)
+import Prelude 
+
+import Effect (Effect)
 import Data.Decidable (class Decidable)
 import Data.Decide (class Decide)
 import Data.Divide (class Divide)
@@ -56,98 +55,98 @@ import Data.Functor.Contravariant (class Contravariant, (>$<))
 import Data.Functor.Invariant (class Invariant)
 
 -- | Typeclass for vars that can be read.
-class Gettable (eff :: # Effect) (var :: Type -> Type) (a :: Type) | var -> a, var -> eff where
-  get :: var a -> Eff eff a
+class Gettable (var :: Type -> Type) (a :: Type) | var -> a where
+  get :: var a -> Effect a
 
 -- | Typeclass for vars that can be written.
-class Settable (eff :: # Effect) (var :: Type -> Type) (a :: Type) | var -> a, var -> eff where
-  set :: var a -> a -> Eff eff Unit
+class Settable (var :: Type -> Type) (a :: Type) | var -> a where
+  set :: var a -> a -> Effect Unit
 
 -- | Alias for `set`.
 infixr 2 set as $=
 
 -- | Typeclass for vars that can be updated.
-class Updatable (eff :: # Effect) (var :: Type -> Type) (a :: Type) | var -> a, var -> eff where
-  update :: var a -> (a -> a) -> Eff eff Unit
+class Updatable (var :: Type -> Type) (a :: Type) | var -> a where
+  update :: var a -> (a -> a) -> Effect Unit
 
 -- | Alias for `get`
 infixr 2 update as $~
 
 -- | Read/Write var which holds a value of type `a` and produces effects `eff`
 -- | when read or written.
-newtype Var (eff :: # Effect) a
-  = Var { gettable :: GettableVar eff a
-        , settable :: SettableVar eff a
+newtype Var a
+  = Var { gettable :: GettableVar a
+        , settable :: SettableVar a
         }
 
 -- | Create a `Var` from getter and setter.
-makeVar :: forall eff a. Eff eff a -> (a -> Eff eff Unit) -> Var eff a
+makeVar :: forall a. Effect a -> (a -> Effect Unit) -> Var a
 makeVar g s = Var { gettable, settable }
   where
     gettable = makeGettableVar g
     settable = makeSettableVar s
 
-instance settableVar :: Settable eff (Var eff) a where
+instance settableVar :: Settable Var a where
   set (Var { settable } ) = set settable
 
-instance gettableVar :: Gettable eff (Var eff) a where
+instance gettableVar :: Gettable Var a where
   get (Var { gettable }) = get gettable
 
-instance updatableVar :: Updatable eff (Var eff) a where
+instance updatableVar :: Updatable Var a where
   update v f = get v >>= f >>> set v
 
-instance invariantVar :: Invariant (Var eff) where
+instance invariantVar :: Invariant Var  where
   imap ab ba (Var v) = Var { gettable: ab <$> v.gettable
                            , settable: ba >$< v.settable
                            }
 
 -- | Read-only var which holds a value of type `a` and produces effects `eff`
 -- | when read.
-newtype GettableVar eff a = GettableVar (Eff eff a)
+newtype GettableVar a = GettableVar (Effect a)
 
 -- | Create a `GettableVar` from getter.
-makeGettableVar :: forall eff a. Eff eff a -> GettableVar eff a
+makeGettableVar :: forall a. Effect a -> GettableVar a
 makeGettableVar = GettableVar
 
-instance gettableGettableVar :: Gettable eff (GettableVar eff) a where
+instance gettableGettableVar :: Gettable GettableVar a where
   get (GettableVar action) = action
 
-instance functorGettableVar :: Functor (GettableVar eff) where
+instance functorGettableVar :: Functor GettableVar where
   map f (GettableVar a) = GettableVar (f <$> a)
 
-instance applyGettableVar :: Apply (GettableVar eff) where
+instance applyGettableVar :: Apply GettableVar where
   apply (GettableVar f) (GettableVar a) = GettableVar (apply f a)
 
-instance applicativeGettableVar :: Applicative (GettableVar eff) where
+instance applicativeGettableVar :: Applicative GettableVar where
   pure = GettableVar <<< pure
 
 -- | Write-only var which holds a value of type `a` and produces effects `eff`
 -- | when written.
-newtype SettableVar eff a = SettableVar (a -> Eff eff Unit)
+newtype SettableVar a = SettableVar (a -> Effect Unit)
 
 -- | Create a `SettableVar` from setter.
-makeSettableVar :: forall eff a. (a -> Eff eff Unit) -> SettableVar eff a
+makeSettableVar :: forall a. (a -> Effect Unit) -> SettableVar a
 makeSettableVar = SettableVar
 
-instance settableSettableVar :: Settable eff (SettableVar eff) a where
+instance settableSettableVar :: Settable SettableVar  a where
   set (SettableVar action) = action
 
-instance contravariantSettableVar :: Contravariant (SettableVar eff) where
+instance contravariantSettableVar :: Contravariant SettableVar where
   cmap f (SettableVar a) = SettableVar (a <<< f)
 
-instance divideSettableVar :: Divide (SettableVar eff) where
+instance divideSettableVar :: Divide SettableVar where
   divide f (SettableVar setb) (SettableVar setc) = SettableVar \a ->
     case f a of
       Tuple b c -> do
         _ <- setb b
         setc c
 
-instance divisibleSettableVar :: Divisible (SettableVar eff) where
+instance divisibleSettableVar :: Divisible SettableVar where
   conquer = SettableVar \_ -> pure unit
 
-instance decideSettableVar :: Decide (SettableVar eff) where
+instance decideSettableVar :: Decide SettableVar where
   choose f (SettableVar setb) (SettableVar setc) = SettableVar (either setb setc <<< f)
 
-instance decidableSettableVar :: Decidable (SettableVar eff) where
+instance decidableSettableVar :: Decidable SettableVar where
 --  lose :: forall a. (a -> Void) -> f a
   lose f = SettableVar (absurd <<< f)
