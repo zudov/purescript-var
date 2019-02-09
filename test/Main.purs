@@ -1,18 +1,17 @@
 module Test.Main where
 
 import Prelude
-import Control.Monad.Eff (Eff, kind Effect)
-import Control.Monad.Eff.Var (Var, ($=), ($~), get, makeVar)
-import Control.Monad.Eff.Console (CONSOLE, log)
+import Effect (Effect)
+import Effect.Var (Var, ($=), ($~), get, makeVar)
+import Effect.Console (log)
 
-foreign import data COUNT :: Effect
-foreign import getCounter :: forall eff. Eff (count :: COUNT | eff) Int
-foreign import setCounter :: forall eff. Int -> Eff (count :: COUNT | eff) Unit
+foreign import getCounter :: Effect Int
+foreign import setCounter :: Int -> Effect Unit
 
-counter :: forall eff. Var (count :: COUNT | eff) Int
+counter :: Var Int
 counter = makeVar getCounter setCounter
 
-main :: Eff (console :: CONSOLE, count :: COUNT) Unit
+main :: Effect Unit
 main = do
   counter $= 0          -- set counter to 0
   get counter >>= print -- => 0
@@ -21,5 +20,5 @@ main = do
   counter $~ (_ * 5)      -- multiply counter by 5
   get counter >>= print -- => 10
 
-print :: forall eff a. Show a => a -> Eff (console :: CONSOLE | eff) Unit
+print :: forall a. Show a => a -> Effect Unit
 print = log <<< show
