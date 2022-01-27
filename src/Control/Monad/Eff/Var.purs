@@ -1,16 +1,15 @@
 -- | `Var`s allow to provide a uniform read/write access to the references in
--- | the `Eff` monad. This is mostly useful when making low-level FFI bindings.
+-- | the `Effect` monad. This is mostly useful when making low-level FFI bindings.
 
 -- | For example we might have some global counter with the following API:
 -- | ```purescript
--- | foreign import data COUNT :: !
--- | getCounter :: forall eff. Eff (count :: COUNT | eff) Int
--- | setCounter :: forall eff. Int -> Eff (count :: COUNT | eff) Unit
+-- | getCounter :: Effect Int
+-- | setCounter :: Int -> Effect Unit
 -- | ```
 -- |
 -- | `getCounter` and `setCounter` can be kept together in a `Var`:
 -- | ```purescript
--- | counter :: forall eff. Var (count :: COUNT | eff) Int
+-- | counter :: Var Int
 -- | counter = makeVar getCounter setCounter
 -- | ```
 -- |
