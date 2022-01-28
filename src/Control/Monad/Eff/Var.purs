@@ -1,16 +1,15 @@
 -- | `Var`s allow to provide a uniform read/write access to the references in
--- | the `Eff` monad. This is mostly useful when making low-level FFI bindings.
+-- | the `Effect` monad. This is mostly useful when making low-level FFI bindings.
 
 -- | For example we might have some global counter with the following API:
 -- | ```purescript
--- | foreign import data COUNT :: !
--- | getCounter :: forall eff. Eff (count :: COUNT | eff) Int
--- | setCounter :: forall eff. Int -> Eff (count :: COUNT | eff) Unit
+-- | getCounter :: Effect Int
+-- | setCounter :: Int -> Effect Unit
 -- | ```
 -- |
 -- | `getCounter` and `setCounter` can be kept together in a `Var`:
 -- | ```purescript
--- | counter :: forall eff. Var (count :: COUNT | eff) Int
+-- | counter :: Var Int
 -- | counter = makeVar getCounter setCounter
 -- | ```
 -- |
@@ -42,7 +41,7 @@ module Effect.Var
   , makeSettableVar
   ) where
 
-import Prelude 
+import Prelude
 
 import Effect (Effect)
 import Data.Decidable (class Decidable)
@@ -74,20 +73,20 @@ infixr 2 update as $~
 
 -- | Read/Write var which holds a value of type `a` and produces effects `eff`
 -- | when read or written.
-newtype Var a
-  = Var { gettable :: GettableVar a
-        , settable :: SettableVar a
-        }
+newtype Var a = Var
+  { gettable :: GettableVar a
+  , settable :: SettableVar a
+  }
 
 -- | Create a `Var` from getter and setter.
 makeVar :: forall a. Effect a -> (a -> Effect Unit) -> Var a
 makeVar g s = Var { gettable, settable }
   where
-    gettable = makeGettableVar g
-    settable = makeSettableVar s
+  gettable = makeGettableVar g
+  settable = makeSettableVar s
 
 instance settableVar :: Settable Var a where
-  set (Var { settable } ) = set settable
+  set (Var { settable }) = set settable
 
 instance gettableVar :: Gettable Var a where
   get (Var { gettable }) = get gettable
@@ -95,10 +94,11 @@ instance gettableVar :: Gettable Var a where
 instance updatableVar :: Updatable Var a where
   update v f = get v >>= f >>> set v
 
-instance invariantVar :: Invariant Var  where
-  imap ab ba (Var v) = Var { gettable: ab <$> v.gettable
-                           , settable: ba >$< v.settable
-                           }
+instance invariantVar :: Invariant Var where
+  imap ab ba (Var v) = Var
+    { gettable: ab <$> v.gettable
+    , settable: ba >$< v.settable
+    }
 
 -- | Read-only var which holds a value of type `a` and produces effects `eff`
 -- | when read.
@@ -128,7 +128,7 @@ newtype SettableVar a = SettableVar (a -> Effect Unit)
 makeSettableVar :: forall a. (a -> Effect Unit) -> SettableVar a
 makeSettableVar = SettableVar
 
-instance settableSettableVar :: Settable SettableVar  a where
+instance settableSettableVar :: Settable SettableVar a where
   set (SettableVar action) = action
 
 instance contravariantSettableVar :: Contravariant SettableVar where
@@ -148,5 +148,5 @@ instance decideSettableVar :: Decide SettableVar where
   choose f (SettableVar setb) (SettableVar setc) = SettableVar (either setb setc <<< f)
 
 instance decidableSettableVar :: Decidable SettableVar where
---  lose :: forall a. (a -> Void) -> f a
+  --  lose :: forall a. (a -> Void) -> f a
   lose f = SettableVar (absurd <<< f)
